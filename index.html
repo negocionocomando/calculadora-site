@@ -66,7 +66,7 @@
   </main>
 
   <script>
-    // 1) URL do seu Web App (Apps Script) – já com /exec
+    // 1) URL do seu Web App (Apps Script) — JÁ COM /exec
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAs3YbsITjbrSukNyf7m6k_QkiS3t2cdepasPVUm6qtNXqU8fkppHWXEP2Fn_q1fcZaA/exec';
 
     // 2) Capturar UTMs e URL da página
@@ -126,21 +126,19 @@
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
       try {
-        // "no-cors" evita bloqueio CORS do Apps Script;
-        // a resposta fica "opaque", então não checamos res.ok.
-        await fetch(WEBHOOK_URL, {
+        // Usamos text/plain para evitar preflight CORS; o Apps Script lê em e.postData.contents
+        const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
-          mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
-        // Sucesso "optimista" (o pedido foi enviado)
+        if (!res.ok) throw new Error('Falha no envio');
+
+        // Sucesso: feedback + redirecionar para o simulador (link absoluto do GitHub Pages)
         btn.textContent = 'Enviado! ✅';
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
-
-        // Redireciona para o simulador (link absoluto)
         setTimeout(() => {
           window.location.href = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
         }, 500);
@@ -149,11 +147,9 @@
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Erro ao enviar. Tente novamente em instantes.';
         btn.textContent = original;
+      } finally {
         btn.disabled = false;
-        return;
       }
-
-      btn.disabled = false;
     });
   </script>
 </body>
