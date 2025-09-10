@@ -3,80 +3,63 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculadora de Precificação</title>
-  <meta name="description" content="Calcule preço sugerido, markup, margem de contribuição e ponto de equilíbrio."/>
+  <title>Calculadora de Precificação – Acesso</title>
+  <meta name="description" content="Cadastre-se para acessar gratuitamente a Calculadora de Precificação (markup, margem de contribuição, lucro e ponto de equilíbrio)." />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
-  <main class="mx-auto max-w-3xl px-4 py-10">
+  <main class="mx-auto max-w-2xl px-4 py-10">
     <header class="mb-8 text-center">
-      <h1 class="text-2xl font-bold">Calculadora de Precificação</h1>
-      <p class="mt-2 text-sm text-gray-600">Preencha os campos e veja os resultados na hora.</p>
+      <h1 class="text-2xl font-bold">Acesse a Calculadora de Precificação</h1>
+      <p class="mt-2 text-sm text-gray-600">Grátis • Instantânea • Sem pegadinha</p>
     </header>
 
-    <section class="rounded-2xl border bg-white p-6 shadow-sm grid gap-6">
-      <div class="grid gap-4 sm:grid-cols-2">
-        <label class="grid gap-1">
-          <span class="text-sm font-medium">Custo unitário (R$)</span>
-          <input id="custo" class="rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="ex: 50,00" />
+    <section class="rounded-2xl border bg-white p-6 shadow-sm">
+      <form id="leadForm" class="grid gap-4" autocomplete="on" novalidate>
+        <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off">
+
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="nome">Nome</label>
+          <input id="nome" name="nome" required
+                 class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
+                 placeholder="Seu nome" />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="email">E-mail</label>
+          <input id="email" type="email" name="email" required
+                 class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
+                 placeholder="voce@exemplo.com" />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="celular">WhatsApp</label>
+          <input id="celular" type="tel" name="celular" required
+                 class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
+                 placeholder="(00) 00000-0000" />
+        </div>
+
+        <label class="flex items-start gap-2 text-xs text-gray-600 select-none">
+          <input id="lgpd" type="checkbox" class="mt-1" checked>
+          Autorizo o envio de conteúdos e ofertas por WhatsApp e e-mail (LGPD).
         </label>
 
-        <label class="grid gap-1">
-          <span class="text-sm font-medium">Despesas variáveis (% do preço)</span>
-          <input id="dv" class="rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="ex: 15 (taxas, impostos...)" />
-        </label>
+        <button type="submit"
+                class="rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white hover:bg-gray-800 disabled:cursor-wait disabled:opacity-70">
+          Liberar acesso agora
+        </button>
 
-        <label class="grid gap-1">
-          <span class="text-sm font-medium">Lucro desejado (% do preço)</span>
-          <input id="lucro" class="rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="ex: 20" />
-        </label>
-
-        <label class="grid gap-1">
-          <span class="text-sm font-medium">Despesas fixas mensais (R$)</span>
-          <input id="df" class="rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="ex: 5000" />
-        </label>
-
-        <label class="grid gap-1 sm:col-span-2">
-          <span class="text-sm font-medium">Volume mensal estimado (unid/mês)</span>
-          <input id="volume" class="rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="ex: 300" />
-        </label>
-      </div>
-
-      <div id="erro" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
-
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Preço sugerido</p>
-          <p id="preco" class="text-2xl font-semibold">R$ 0,00</p>
-        </div>
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Markup</p>
-          <p id="markup" class="text-2xl font-semibold">0,00x</p>
-        </div>
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Margem de contribuição (R$)</p>
-          <p id="mcUn" class="text-2xl font-semibold">R$ 0,00</p>
-        </div>
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Margem de contribuição (%)</p>
-          <p id="mcPct" class="text-2xl font-semibold">0,00%</p>
-        </div>
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Ponto de equilíbrio (unid/mês)</p>
-          <p id="pe" class="text-2xl font-semibold">0</p>
-        </div>
-        <div class="rounded-xl border bg-gray-50 p-4">
-          <p class="text-xs text-gray-500">Lucro estimado p/ volume</p>
-          <p id="lucroMes" class="text-2xl font-semibold">R$ 0,00</p>
-        </div>
-      </div>
-
-      <div class="text-center">
-        <a href="https://negocionocomando.github.io/calculadora-site/"
-           class="text-sm text-gray-700 underline">Voltar</a>
-      </div>
+        <p id="msg" class="text-sm"></p>
+      </form>
     </section>
+
+    <div class="mt-10 text-center">
+      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html"
+         class="text-sm text-gray-700 underline">
+        Ir direto ao simulador
+      </a>
+    </div>
 
     <p class="mt-6 text-center text-xs text-gray-500">
       © 2025 Negócio no Comando
@@ -84,68 +67,94 @@
   </main>
 
   <script>
-    // Helpers
-    const toNum = (v) => {
-      if (typeof v !== 'string') return Number(v) || 0;
-      return Number(v.replace(/\./g,'').replace(',','.')) || 0;
+    // ==== CONFIG ====
+    // Seu Apps Script Web App (com /exec no final)
+    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAs3YbsITjbrSukNyf7m6k_QkiS3t2cdepasPVUm6qtNXqU8fkppHWXEP2Fn_q1fcZaA/exec';
+    // Para onde redirecionar após sucesso
+    const DESTINO = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+
+    // UTMs
+    const qs = new URLSearchParams(location.search);
+    const utm = {
+      utm_source:  qs.get('utm_source')   || '',
+      utm_medium:  qs.get('utm_medium')   || '',
+      utm_campaign:qs.get('utm_campaign') || '',
+      utm_term:    qs.get('utm_term')     || '',
+      utm_content: qs.get('utm_content')  || ''
     };
-    const moeda = (n) => n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
-    const pct    = (n) => (n*100).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + '%';
-    const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-    // Campos
-    const $ = (id) => document.getElementById(id);
-    const inputs = ['custo','dv','lucro','df','volume'].map($);
+    // Máscara simples
+    const cel = document.getElementById('celular');
+    cel.addEventListener('input', () => {
+      let v = cel.value.replace(/\D/g,'').slice(0,11);
+      if (v.length > 6) cel.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+      else if (v.length > 2) cel.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+      else cel.value = v;
+    });
 
-    function recalcular(){
-      const custo  = toNum($('custo').value);
-      const dv     = toNum($('dv').value) / 100;     // despesas variáveis (% do preço)
-      const lucro  = toNum($('lucro').value) / 100;  // lucro desejado (% do preço)
-      const df     = toNum($('df').value);           // despesas fixas mensais (R$)
-      const volume = toNum($('volume').value);       // volume mensal estimado
+    // Envio
+    const form = document.getElementById('leadForm');
+    const msg  = document.getElementById('msg');
 
-      const boxErro = $('erro');
-      boxErro.classList.add('hidden'); boxErro.textContent = '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if ((form.website?.value || '').trim() !== '') return; // honeypot
 
-      if (dv + lucro >= 1){
-        boxErro.textContent = 'A soma de Despesas variáveis (%) + Lucro desejado (%) deve ser menor que 100%.';
-        boxErro.classList.remove('hidden');
-        render(0,0,0,0,0,0);
+      const payload = {
+        nome   : (form.nome.value   || '').trim(),
+        email  : (form.email.value  || '').trim(),
+        celular: (form.celular.value|| '').replace(/\D/g,''),
+        ...utm,
+        page_url: location.href
+      };
+
+      if (!payload.nome || !payload.email || !payload.celular) {
+        msg.className = 'text-red-600 text-sm';
+        msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
         return;
       }
-      if (custo <= 0){
-        render(0,0,0,0,0,0);
+      if (!document.getElementById('lgpd').checked) {
+        msg.className = 'text-red-600 text-sm';
+        msg.textContent = 'Marque a autorização LGPD para continuar.';
         return;
       }
 
-      // Fórmulas
-      const preco = round2( custo / (1 - dv - lucro) );          // preço sugerido
-      const markup = round2(preco / custo);                      // markup (x)
-      const mcUn = round2(preco*(1 - dv) - custo);               // margem de contribuição unitária (R$)
-      const mcPct = (preco > 0) ? mcUn / preco : 0;              // margem de contribuição %
-      const pe = (mcUn > 0 && df > 0) ? Math.ceil(df / mcUn) : 0;// ponto de equilíbrio (unidades)
-      const lucroMes = round2(mcUn * volume - df);               // lucro estimado
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      render(preco, markup, mcUn, mcPct, pe, lucroMes);
-    }
+      try {
+        let detalhes = '';
+        let okFinal = false;
 
-    function render(preco, markup, mcUn, mcPct, pe, lucroMes){
-      $('preco').textContent  = moeda(preco);
-      $('markup').textContent = markup.toLocaleString('pt-BR', { maximumFractionDigits:2 }) + 'x';
-      $('mcUn').textContent   = moeda(mcUn);
-      $('mcPct').textContent  = pct(mcPct);
-      $('pe').textContent     = (pe||0).toLocaleString('pt-BR');
-      $('lucroMes').textContent = moeda(lucroMes);
-    }
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
 
-    inputs.forEach(el => el.addEventListener('input', recalcular));
-    // valores exemplo
-    $('custo').value  = '50,00';
-    $('dv').value     = '15';
-    $('lucro').value  = '20';
-    $('df').value     = '5000';
-    $('volume').value = '300';
-    recalcular();
+        const texto = await res.text().catch(()=> '');
+        detalhes = `status ${res.status} · ${texto.slice(0,200)}`;
+        // Considera sucesso quando status 200 E o corpo indica ok:true
+        okFinal = res.status === 200 && /"ok"\s*:\s*true/i.test(texto);
+
+        if (okFinal) {
+          btn.textContent = 'Enviado! ✅';
+          msg.className = 'text-emerald-700 text-sm';
+          msg.textContent = 'Cadastro recebido. Redirecionando…';
+          setTimeout(() => { window.location.href = DESTINO; }, 500);
+        } else {
+          throw new Error(detalhes || 'Sem detalhes');
+        }
+      } catch (err) {
+        console.error('Falha no envio:', err);
+        msg.className = 'text-red-600 text-sm';
+        msg.innerHTML = 'Erro ao enviar. Tente novamente em instantes.<br><span class="text-xs text-gray-500">Diagnóstico: ' + (err.message || String(err)).replace(/</g,'&lt;').slice(0,300) + '</span>';
+        btn.textContent = original;
+      } finally {
+        btn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
