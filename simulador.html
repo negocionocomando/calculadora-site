@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Precificação – Simulador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Simule preço de venda, markup, margem de contribuição, lucro e ponto de equilíbrio em poucos segundos." />
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <div class="mx-auto max-w-5xl px-4 py-8">
+    <header class="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+      <div>
+        <h1 class="text-2xl font-bold">Calculadora de Precificação</h1>
+        <p class="text-sm text-gray-600">Insira seus dados e veja os resultados na hora</p>
+      </div>
+      <a id="ctaVendas" href="#" target="_blank" class="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:opacity-90">Quero dominar a precificação</a>
+    </header>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      <section class="rounded-2xl border bg-white p-6 shadow-sm">
+        <h2 class="mb-4 text-lg font-semibold">Entradas</h2>
+        <div class="mb-4">
+          <label class="mb-1 block text-sm font-medium">Custo unitário (R$)</label>
+          <input id="custo" type="number" inputmode="decimal" min="0" step="0.01" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="Ex.: 50,00" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium">Impostos (% do preço)</label>
+            <input id="impostos" type="number" min="0" step="0.1" value="10" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium">Taxas/Cartão (% do preço)</label>
+            <input id="taxas" type="number" min="0" step="0.1" value="3" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium">Comissão (% do preço)</label>
+            <input id="comissao" type="number" min="0" step="0.1" value="0" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium">Margem de lucro desejada (% do preço)</label>
+            <input id="margem" type="number" min="0" step="0.1" value="20" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="mb-1 block text-sm font-medium">Custos fixos mensais (R$) — opcional</label>
+          <input id="fixos" type="number" inputmode="decimal" min="0" step="0.01" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="Para calcular o ponto de equilíbrio" />
+        </div>
+        <div class="mt-6 flex gap-3">
+          <button id="limpar" class="rounded-2xl border px-4 py-2 text-sm hover:bg-white">Limpar</button>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border bg-white p-6 shadow-sm">
+        <h2 class="mb-4 text-lg font-semibold">Resultados</h2>
+        <div class="grid gap-3">
+          <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Preço sugerido</div><div id="preco" class="text-2xl font-semibold">R$ 0,00</div></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Markup</div><div id="markup" class="font-semibold">0,00x</div></div>
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Lucro por unidade</div><div id="lucro" class="font-semibold">R$ 0,00</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Margem de contribuição</div><div id="margR" class="font-semibold">R$ 0,00</div></div>
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Margem de contribuição %</div><div id="margP" class="font-semibold">0,0%</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Impostos (R$)</div><div id="impR" class="font-semibold">R$ 0,00</div></div>
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Taxas/Cartão (R$)</div><div id="taxR" class="font-semibold">R$ 0,00</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Comissão (R$)</div><div id="comR" class="font-semibold">R$ 0,00</div></div>
+            <div class="rounded-xl border p-4"><div class="text-xs text-gray-500">Custos variáveis (R$)</div><div id="cvR" class="font-semibold">R$ 0,00</div></div>
+          </div>
+          <div class="rounded-xl border p-4 hidden" id="peWrap"><div class="text-xs text-gray-500">Ponto de equilíbrio (qtd.)</div><div id="pe" class="font-semibold">—</div></div>
+        </div>
+        <p class="mt-6 text-xs text-gray-500">Fórmula: Preço = Custo / (1 - (Impostos% + Taxas% + Comissão% + Margem%)). Margem informada = lucro líquido desejado sobre o preço.</p>
+      </section>
+    </div>
+
+    <footer class="mt-10 text-center text-xs text-gray-500">© <span id="year2"></span> Negócio no Comando — Calculadora educativa.</footer>
+  </div>
+
+  <script>
+    document.getElementById('year2').textContent = new Date().getFullYear();
+    const URL_CTA_VENDAS = "https://vendas.negocionocomando.com.br"; // SUBSTITUA AQUI
+    document.getElementById('ctaVendas').href = URL_CTA_VENDAS;
+
+    const fmt = (n) => (isFinite(n) ? n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00');
+
+    const els = {
+      custo: document.getElementById('custo'),
+      impostos: document.getElementById('impostos'),
+      taxas: document.getElementById('taxas'),
+      comissao: document.getElementById('comissao'),
+      margem: document.getElementById('margem'),
+      fixos: document.getElementById('fixos'),
+      preco: document.getElementById('preco'),
+      markup: document.getElementById('markup'),
+      lucro: document.getElementById('lucro'),
+      margR: document.getElementById('margR'),
+      margP: document.getElementById('margP'),
+      impR: document.getElementById('impR'),
+      taxR: document.getElementById('taxR'),
+      comR: document.getElementById('comR'),
+      cvR: document.getElementById('cvR'),
+      peWrap: document.getElementById('peWrap'),
+      pe: document.getElementById('pe'),
+      limpar: document.getElementById('limpar')
+    };
+
+    const calc = () => {
+      const C = Number(els.custo.value) || 0;
+      const I = (Number(els.impostos.value) || 0) / 100;
+      const T = (Number(els.taxas.value) || 0) / 100;
+      const K = (Number(els.comissao.value) || 0) / 100;
+      const M = (Number(els.margem.value) || 0) / 100;
+
+      const denom = 1 - (I + T + K + M);
+      const PV = denom > 0 ? C / denom : 0;
+
+      const impostosR = PV * I;
+      const taxasR = PV * T;
+      const comissaoR = PV * K;
+      const lucro = PV * M;
+      const custoVarTotal = C + impostosR + taxasR + comissaoR;
+      const margR = PV - custoVarTotal;
+      const margP = PV > 0 ? (margR / PV) * 100 : 0;
+      const markup = C > 0 ? PV / C : 0;
+
+      els.preco.textContent = fmt(PV);
+      els.markup.textContent = `${markup.toFixed(2)}x`;
+      els.lucro.textContent = fmt(lucro);
+      els.margR.textContent = fmt(margR);
+      els.margP.textContent = `${margP.toFixed(1)}%`;
+      els.impR.textContent = fmt(impostosR);
+      els.taxR.textContent = fmt(taxasR);
+      els.comR.textContent = fmt(comissaoR);
+      els.cvR.textContent = fmt(custoVarTotal);
+
+      const fixos = Number(els.fixos.value) || 0;
+      if (fixos > 0 && margR > 0) {
+        els.pe.textContent = (fixos / margR).toFixed(2) + ' un.';
+        els.peWrap.classList.remove('hidden');
+      } else {
+        els.peWrap.classList.add('hidden');
+      }
+    };
+
+    ['input', 'change'].forEach(evt => {
+      ['custo','impostos','taxas','comissao','margem','fixos'].forEach(id => {
+        els[id].addEventListener(evt, calc);
+      });
+    });
+
+    els.limpar.addEventListener('click', (e) => {
+      e.preventDefault();
+      ['custo','impostos','taxas','comissao','margem','fixos'].forEach(id => els[id].value = id === 'impostos' ? 10 : id === 'taxas' ? 3 : id === 'margem' ? 20 : '');
+      calc();
+    });
+
+    calc();
+  </script>
+</body>
+</html>

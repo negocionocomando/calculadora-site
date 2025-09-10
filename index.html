@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Precificação – Acesso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Cadastre-se para acessar gratuitamente a Calculadora de Precificação (markup, margem de contribuição, lucro e ponto de equilíbrio)." />
+</head>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
+  <main class="mx-auto max-w-xl px-4 py-10">
+    <header class="mb-8 text-center">
+      <h1 class="text-2xl font-bold">Acesse a Calculadora de Precificação</h1>
+      <p class="mt-2 text-sm text-gray-600">Grátis • Instantânea • Sem pegadinha</p>
+    </header>
+
+    <section class="rounded-2xl border bg-white p-6 shadow-sm">
+      <form id="leadForm" class="grid gap-4">
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="nome">Nome</label>
+          <input id="nome" name="nome" required class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="Seu nome" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="email">E-mail</label>
+          <input id="email" name="email" type="email" required class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="voce@email.com" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="whatsapp">WhatsApp</label>
+          <input id="whatsapp" name="whatsapp" required class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="(xx) xxxxx-xxxx" />
+        </div>
+        <label class="flex items-start gap-2 text-xs text-gray-600">
+          <input type="checkbox" required class="mt-1" />
+          Autorizo o envio de conteúdos e ofertas por WhatsApp e e-mail (LGPD).
+        </label>
+        <button type="submit" class="w-full rounded-2xl bg-gray-900 px-4 py-3 font-medium text-white transition hover:opacity-90">Liberar acesso agora</button>
+        <p id="status" class="text-center text-xs text-gray-500"></p>
+      </form>
+    </section>
+
+    <p class="mt-6 text-center text-xs text-gray-500">© <span id="year"></span> Negócio no Comando</p>
+  </main>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const MANYCHAT_WEBHOOK_URL = ""; // cole aqui seu webhook (Make/Zapier ou endpoint que chama a API do ManyChat)
+    const APPS_SCRIPT_WEBAPP_URL = ""; // Apps Script para salvar em Google Sheets (opcional)
+    const REDIRECT_URL = "./simulador.html";
+
+    const form = document.getElementById('leadForm');
+    const statusEl = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Enviando…';
+
+      const payload = {
+        nome: form.nome.value.trim(),
+        email: form.email.value.trim(),
+        whatsapp: form.whatsapp.value.trim(),
+        ts: new Date().toISOString()
+      };
+
+      try {
+        const leads = JSON.parse(localStorage.getItem('nc_leads') || '[]');
+        leads.push(payload);
+        localStorage.setItem('nc_leads', JSON.stringify(leads));
+      } catch {}
+
+      const requests = [];
+      if (MANYCHAT_WEBHOOK_URL) {
+        requests.push(fetch(MANYCHAT_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }));
+      }
+      if (APPS_SCRIPT_WEBAPP_URL) {
+        requests.push(fetch(APPS_SCRIPT_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }));
+      }
+
+      try {
+        if (requests.length) {
+          await Promise.race([
+            Promise.allSettled(requests),
+            new Promise((resolve) => setTimeout(resolve, 1200))
+          ]);
+        } else {
+          await new Promise((r) => setTimeout(r, 400));
+        }
+      } catch {}
+
+      window.location.href = REDIRECT_URL;
+    });
+  </script>
+</body>
+</html>
