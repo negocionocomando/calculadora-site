@@ -68,9 +68,7 @@
 
   <script>
     // ==== CONFIG ====
-    // Seu Apps Script Web App (com /exec no final)
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAs3YbsITjbrSukNyf7m6k_QkiS3t2cdepasPVUm6qtNXqU8fkppHWXEP2Fn_q1fcZaA/exec';
-    // Para onde redirecionar após sucesso
     const DESTINO = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
     // UTMs
@@ -135,7 +133,6 @@
 
         const texto = await res.text().catch(()=> '');
         detalhes = `status ${res.status} · ${texto.slice(0,200)}`;
-        // Considera sucesso quando status 200 E o corpo indica ok:true
         okFinal = res.status === 200 && /"ok"\s*:\s*true/i.test(texto);
 
         if (okFinal) {
