@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora de Precificação – Acesso</title>
   <meta name="description" content="Cadastre-se para acessar gratuitamente a Calculadora de Precificação (markup, margem de contribuição, lucro e ponto de equilíbrio)." />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
@@ -15,7 +17,6 @@
     </header>
 
     <section class="rounded-2xl border bg-white p-6 shadow-sm">
-      <!-- Formulário -->
       <form id="leadForm" class="grid gap-4" autocomplete="on" novalidate>
         <!-- Honeypot anti-spam (não preencha) -->
         <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off">
@@ -57,7 +58,9 @@
 
     <div class="mt-10 text-center">
       <a href="https://negocionocomando.github.io/calculadora-site/simulador.html"
-         class="text-sm text-gray-700 underline">Ir direto ao simulador</a>
+         class="text-sm text-gray-700 underline">
+        Ir direto ao simulador
+      </a>
     </div>
 
     <p class="mt-6 text-center text-xs text-gray-500">
@@ -66,7 +69,7 @@
   </main>
 
   <script>
-    // 1) URL do seu Web App (Apps Script) — JÁ COM /exec
+    // 1) URL do seu Web App (Apps Script) – já com /exec
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAs3YbsITjbrSukNyf7m6k_QkiS3t2cdepasPVUm6qtNXqU8fkppHWXEP2Fn_q1fcZaA/exec';
 
     // 2) Capturar UTMs e URL da página
@@ -79,7 +82,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // 3) Máscara leve de telefone (opcional)
+    // 3) Máscara leve de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -95,7 +98,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Honeypot: se o robô preencher, não envia
+      // honeypot
       if ((form.website?.value || '').trim() !== '') return;
 
       const payload = {
@@ -106,14 +109,12 @@
         page_url: location.href
       };
 
-      // validações simples
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
         return;
       }
 
-      // (Opcional) exigir LGPD marcado
       const lgpd = document.getElementById('lgpd');
       if (!lgpd.checked) {
         msg.className = 'text-red-600 text-sm';
@@ -126,7 +127,7 @@
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
       try {
-        // Usamos text/plain para evitar preflight CORS; o Apps Script lê em e.postData.contents
+        // text/plain evita preflight CORS; Apps Script lê em e.postData.contents
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -135,10 +136,11 @@
 
         if (!res.ok) throw new Error('Falha no envio');
 
-        // Sucesso: feedback + redirecionar para o simulador (link absoluto do GitHub Pages)
         btn.textContent = 'Enviado! ✅';
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
+
+        // URL ABSOLUTA para o simulador (funciona com ou sem domínio próprio)
         setTimeout(() => {
           window.location.href = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
         }, 500);
