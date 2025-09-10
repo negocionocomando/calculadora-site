@@ -56,7 +56,9 @@
     </section>
 
     <div class="mt-10 text-center">
-      <a href="./simulador.html" class="text-sm text-gray-700 underline">Ir direto ao simulador</a>
+      <!-- LINK ABSOLUTO PARA O DOMÍNIO PADRÃO DO GITHUB PAGES -->
+      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html"
+         class="text-sm text-gray-700 underline">Ir direto ao simulador</a>
     </div>
 
     <p class="mt-6 text-center text-xs text-gray-500">
@@ -134,11 +136,13 @@
 
         if (!res.ok) throw new Error('Falha no envio');
 
-        // Sucesso: dá feedback e redireciona para o simulador (LINK RELATIVO)
+        // Sucesso: feedback e REDIRECIONAMENTO ABSOLUTO
         btn.textContent = 'Enviado! ✅';
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
-        setTimeout(() => { window.location.href = 'simulador.html'; }, 500);
+        setTimeout(() => {
+          window.location.href = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+        }, 500);
       } catch (err) {
         console.error(err);
         msg.className = 'text-red-600 text-sm';
