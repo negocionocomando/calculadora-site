@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora de Precificação – Acesso</title>
   <meta name="description" content="Cadastre-se para acessar gratuitamente a Calculadora de Precificação (markup, margem de contribuição, lucro e ponto de equilíbrio)." />
-  <!-- Tailwind (como você já usava) -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
@@ -42,22 +41,27 @@
                  placeholder="(00) 00000-0000" />
         </div>
 
+        <label class="flex items-start gap-2 text-xs text-gray-600 select-none">
+          <input id="lgpd" type="checkbox" class="mt-1" checked>
+          Autorizo o envio de conteúdos e ofertas por WhatsApp e e-mail (LGPD).
+        </label>
+
         <button type="submit"
                 class="rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white hover:bg-gray-800 disabled:cursor-wait disabled:opacity-70">
-          Quero receber
+          Liberar acesso agora
         </button>
 
         <p id="msg" class="text-sm"></p>
       </form>
     </section>
 
-    <p class="mt-6 text-center text-xs text-gray-500">
-      Ao continuar, você concorda em receber comunicações sobre a calculadora e conteúdos úteis. Você pode sair quando quiser.
-    </p>
-
     <div class="mt-10 text-center">
       <a href="./simulador.html" class="text-sm text-gray-700 underline">Ir direto ao simulador</a>
     </div>
+
+    <p class="mt-6 text-center text-xs text-gray-500">
+      © 2025 Negócio no Comando
+    </p>
   </main>
 
   <script>
@@ -108,6 +112,14 @@
         return;
       }
 
+      // (Opcional) exigir LGPD marcado
+      const lgpd = document.getElementById('lgpd');
+      if (!lgpd.checked) {
+        msg.className = 'text-red-600 text-sm';
+        msg.textContent = 'Marque a autorização LGPD para continuar.';
+        return;
+      }
+
       const btn = form.querySelector('button[type="submit"]');
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
@@ -122,12 +134,11 @@
 
         if (!res.ok) throw new Error('Falha no envio');
 
+        // Sucesso: dá feedback e redireciona para o simulador (LINK RELATIVO)
         btn.textContent = 'Enviado! ✅';
         msg.className = 'text-emerald-700 text-sm';
-        msg.textContent = 'Cadastro recebido. Confira seu e-mail/WhatsApp.';
-
-        // Redirecionar (opcional):
-        // location.href = '/obrigado.html';
+        msg.textContent = 'Cadastro recebido. Redirecionando…';
+        setTimeout(() => { window.location.href = 'simulador.html'; }, 500);
       } catch (err) {
         console.error(err);
         msg.className = 'text-red-600 text-sm';
