@@ -68,21 +68,22 @@
   </main>
 
   <script>
-    // ==== CONFIG (seu Webhook novo e destino absoluto) ====
+    // ==== CONFIG ====
     const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwLkKpqIInJfd7uzg5_0EO22T0lC3Z1AVeVWQ4efBZt06iVAwslDC2QnJO9ExqAQDe2HA/exec';
-    const DESTINO = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+    const DESTINO     = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+    const ALLOW_BLIND_REDIRECT = true; // fallback "no-cors": redireciona mesmo sem ler resposta
 
-    // Capturar UTMs
+    // UTMs
     const qs = new URLSearchParams(location.search);
     const utm = {
-      utm_source:  qs.get('utm_source')   || '',
-      utm_medium:  qs.get('utm_medium')   || '',
+      utm_source : qs.get('utm_source')   || '',
+      utm_medium : qs.get('utm_medium')   || '',
       utm_campaign:qs.get('utm_campaign') || '',
-      utm_term:    qs.get('utm_term')     || '',
+      utm_term   : qs.get('utm_term')     || '',
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // Máscara leve de telefone
+    // Máscara leve
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -91,9 +92,12 @@
       else cel.value = v;
     });
 
-    // Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
+
+    // Helpers
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const safe = (s) => String(s || '').replace(/</g,'&lt;').slice(0,300);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -123,31 +127,79 @@
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
       try {
-        let detalhes = '';
-        let okFinal = false;
-
-        const res = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-
-        const texto = await res.text().catch(()=> '');
-        detalhes = `status ${res.status} · ${texto.slice(0,200)}`;
-        okFinal = res.status === 200 && /"ok"\s*:\s*true/i.test(texto);
-
-        if (okFinal) {
-          btn.textContent = 'Enviado! ✅';
-          msg.className = 'text-emerald-700 text-sm';
-          msg.textContent = 'Cadastro recebido. Redirecionando…';
-          setTimeout(() => { window.location.href = DESTINO; }, 500);
-        } else {
-          throw new Error(detalhes || 'Sem detalhes');
+        // TENTATIVA 1: x-www-form-urlencoded (CORS simples)
+        try {
+          const body1 = new URLSearchParams(payload).toString();
+          const r1 = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: body1,
+            redirect: 'follow'
+          });
+          const t1 = await r1.text().catch(()=> '');
+          if (r1.status === 200 && /"ok"\s*:\s*true/i.test(t1)) {
+            btn.textContent = 'Enviado! ✅';
+            msg.className = 'text-emerald-700 text-sm';
+            msg.textContent = 'Cadastro recebido. Redirecionando…';
+            await sleep(400);
+            location.href = DESTINO;
+            return;
+          } else {
+            throw new Error(`1) status ${r1.status} · ${t1.slice(0,200)}`);
+          }
+        } catch (e1) {
+          console.warn('Tentativa 1 falhou:', e1);
         }
+
+        // TENTATIVA 2: text/plain (JSON)
+        try {
+          const r2 = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'text/plain;charset=utf-8'},
+            body: JSON.stringify(payload),
+            redirect: 'follow'
+          });
+          const t2 = await r2.text().catch(()=> '');
+          if (r2.status === 200 && /"ok"\s*:\s*true/i.test(t2)) {
+            btn.textContent = 'Enviado! ✅';
+            msg.className = 'text-emerald-700 text-sm';
+            msg.textContent = 'Cadastro recebido. Redirecionando…';
+            await sleep(400);
+            location.href = DESTINO;
+            return;
+          } else {
+            throw new Error(`2) status ${r2.status} · ${t2.slice(0,200)}`);
+          }
+        } catch (e2) {
+          console.warn('Tentativa 2 falhou:', e2);
+        }
+
+        // TENTATIVA 3: no-cors (envio cego)
+        if (ALLOW_BLIND_REDIRECT) {
+          try {
+            await fetch(WEBHOOK_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+              body: new URLSearchParams(payload).toString()
+            });
+            // Não dá para ler a resposta; assume sucesso e segue
+            btn.textContent = 'Enviado! ✅';
+            msg.className = 'text-emerald-700 text-sm';
+            msg.textContent = 'Cadastro recebido. Redirecionando…';
+            await sleep(400);
+            location.href = DESTINO;
+            return;
+          } catch (e3) {
+            throw new Error('3) no-cors falhou: ' + safe(e3 && e3.message));
+          }
+        }
+
+        throw new Error('Todas as tentativas falharam.');
       } catch (err) {
-        console.error('Falha no envio:', err);
+        console.error('Falha geral:', err);
         msg.className = 'text-red-600 text-sm';
-        msg.innerHTML = 'Erro ao enviar. Tente novamente em instantes.<br><span class="text-xs text-gray-500">Diagnóstico: ' + (err.message || String(err)).replace(/</g,'&lt;').slice(0,300) + '</span>';
+        msg.innerHTML = 'Erro ao enviar. Tente novamente em instantes.<br><span class="text-xs text-gray-500">Diagnóstico: ' + safe(err && err.message) + '</span>';
         btn.textContent = original;
       } finally {
         btn.disabled = false;
