@@ -17,6 +17,7 @@
 
     <section class="rounded-2xl border bg-white p-6 shadow-sm">
       <form id="leadForm" class="grid gap-4" autocomplete="on" novalidate>
+        <!-- Honeypot anti-spam (não preencha) -->
         <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off">
 
         <div>
@@ -67,11 +68,11 @@
   </main>
 
   <script>
-    // ==== CONFIG ====
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAs3YbsITjbrSukNyf7m6k_QkiS3t2cdepasPVUm6qtNXqU8fkppHWXEP2Fn_q1fcZaA/exec';
+    // ==== CONFIG (seu Webhook novo e destino absoluto) ====
+    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwLkKpqIInJfd7uzg5_0EO22T0lC3Z1AVeVWQ4efBZt06iVAwslDC2QnJO9ExqAQDe2HA/exec';
     const DESTINO = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // UTMs
+    // Capturar UTMs
     const qs = new URLSearchParams(location.search);
     const utm = {
       utm_source:  qs.get('utm_source')   || '',
@@ -81,7 +82,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // Máscara simples
+    // Máscara leve de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -90,7 +91,7 @@
       else cel.value = v;
     });
 
-    // Envio
+    // Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
