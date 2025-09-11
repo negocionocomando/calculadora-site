@@ -55,7 +55,8 @@
     </section>
 
     <div class="mt-10 text-center">
-      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html" class="text-sm text-gray-700 underline">
+      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html"
+         class="text-sm text-gray-700 underline">
         Ir direto ao simulador
       </a>
     </div>
@@ -66,11 +67,13 @@
   </main>
 
   <script>
-    // ====== CONFIG ======
+    // === CONFIG ===
+    // Web App (V12) — Apps Script
     const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbz93JavRyJAFz8nn3PxmAnF-HkwWoE8NoqIFCCEa3gQozS3-eJW6f9H5mFMfhmrcsHzOQ/exec';
+    // URL do simulador publicada no GitHub Pages
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // Capturar UTMs e URL
+    // Captura UTMs
     const qs = new URLSearchParams(location.search);
     const utm = {
       utm_source:  qs.get('utm_source')   || '',
@@ -80,7 +83,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // Máscara leve de telefone
+    // Máscara leve telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -89,15 +92,12 @@
       else cel.value = v;
     });
 
-    // Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      // Honeypot: se o robô preencher, não envia
-      if ((form.website?.value || '').trim() !== '') return;
+      if ((form.website?.value || '').trim() !== '') return; // honeypot
 
       const payload = {
         nome   : (form.nome.value   || '').trim(),
@@ -107,7 +107,7 @@
         page_url: location.href
       };
 
-      // validações simples
+      // validações
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -123,19 +123,19 @@
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Redirecionamento garantido (UX): mesmo que a rede bloqueie, o usuário avança
+      // Redirecionamento garantido (UX)
       const go = () => { window.location.href = SIMULADOR_URL; };
       const redirectTimer = setTimeout(go, 600);
 
       try {
-        // text/plain evita preflight CORS; Apps Script lê em e.postData.contents
+        // Envio principal (text/plain evita preflight CORS)
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
-        // Se falhar, tenta um "fire-and-forget" com sendBeacon
+        // Se falhar, tenta beacon (fire-and-forget)
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -145,27 +145,46 @@
           } catch {}
         }
 
+        // Feedback
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
 
       } catch (err) {
-        // Última tentativa de envio em background
+        // Última tentativa de beacon
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
             new Blob([JSON.stringify(payload)], { type: 'text/plain' })
           );
         } catch {}
+        // Mantém o redirecionamento pelo timer
         msg.className = 'text-orange-600 text-sm';
-        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em “Ir direto ao simulador”.';
+        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Se quiser redirecionar na hora (sem esperar 600ms), descomente:
+        // Se quiser redirecionar já, em vez de esperar 600ms:
         // clearTimeout(redirectTimer); go();
       }
     });
+
+    // ======= DEBUG OPCIONAL (chame no console: _sendTestLead()) =======
+    window._sendTestLead = () => {
+      return fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          nome:'Debug',
+          email:'debug@teste.com',
+          celular:'67999999999',
+          page_url: location.href
+        })
+      })
+      .then(r => r.text())
+      .then(t => { console.log('RESPOSTA:', t); return t; })
+      .catch(e => { console.error(e); throw e; });
+    };
   </script>
 </body>
 </html>
