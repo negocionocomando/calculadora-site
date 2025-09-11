@@ -77,6 +77,37 @@
       </section>
     </div>
 
+    <!-- ===== Feedback de Satisfação (5 estrelas + texto) ===== -->
+    <section class="mt-10 rounded-2xl border bg-white p-6 shadow-sm">
+      <h2 class="mb-2 text-lg font-semibold">Avalie a Calculadora</h2>
+      <p class="mb-4 text-sm text-gray-600">Clique nas estrelas e, se quiser, deixe uma sugestão. Isso leva menos de 10 segundos. 🙌</p>
+
+      <!-- Estrelas -->
+      <div id="nc-stars" class="flex items-center gap-2" aria-label="Avaliação em estrelas (1 a 5)">
+        <button type="button" class="nc-star text-2xl" data-value="1" aria-label="1 estrela" title="1 estrela">★</button>
+        <button type="button" class="nc-star text-2xl" data-value="2" aria-label="2 estrelas" title="2 estrelas">★</button>
+        <button type="button" class="nc-star text-2xl" data-value="3" aria-label="3 estrelas" title="3 estrelas">★</button>
+        <button type="button" class="nc-star text-2xl" data-value="4" aria-label="4 estrelas" title="4 estrelas">★</button>
+        <button type="button" class="nc-star text-2xl" data-value="5" aria-label="5 estrelas" title="5 estrelas">★</button>
+        <span id="nc-stars-hint" class="ml-2 text-sm text-gray-500"></span>
+      </div>
+
+      <!-- Caixa de texto opcional -->
+      <div class="mt-4">
+        <label for="nc-feedback" class="mb-1 block text-sm font-medium">Sugestão de melhoria (opcional)</label>
+        <textarea id="nc-feedback" rows="3" class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2" placeholder="O que podemos melhorar?"></textarea>
+        <div class="mt-1 text-xs text-gray-500" id="nc-count">0/600</div>
+      </div>
+
+      <!-- Ações -->
+      <div class="mt-4 flex items-center gap-3">
+        <button id="nc-send" class="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" disabled>
+          Enviar avaliação
+        </button>
+        <span id="nc-msg" class="text-sm"></span>
+      </div>
+    </section>
+
     <footer class="mt-10 text-center text-xs text-gray-500">© <span id="year2"></span> Negócio no Comando — Calculadora educativa.</footer>
   </div>
 
@@ -159,6 +190,145 @@
     });
 
     calc();
+
+    /* ================== FEEDBACK / AVALIAÇÃO ================== */
+
+    // 🔗 Substitua pela sua URL de Apps Script (Web App) que recebe POST de texto/JSON
+    const FEEDBACK_URL = "https://script.google.com/macros/s/SEU_ID_DO_APPS_SCRIPT/exec"; // <- TROQUE AQUI
+
+    // Captura UTMs da página do simulador (se existirem)
+    const _qs = new URLSearchParams(location.search);
+    const _utm = {
+      utm_source:   _qs.get('utm_source')   || '',
+      utm_medium:   _qs.get('utm_medium')   || '',
+      utm_campaign: _qs.get('utm_campaign') || '',
+      utm_term:     _qs.get('utm_term')     || '',
+      utm_content:  _qs.get('utm_content')  || ''
+    };
+
+    // Elementos
+    const $stars     = Array.from(document.querySelectorAll('.nc-star'));
+    const $hint      = document.getElementById('nc-stars-hint');
+    const $txt       = document.getElementById('nc-feedback');
+    const $count     = document.getElementById('nc-count');
+    const $send      = document.getElementById('nc-send');
+    const $msg       = document.getElementById('nc-msg');
+
+    // Estado
+    let selected = 0;
+    const MAX_CHARS = 600;
+    const STORAGE_KEY = 'nc_calc_feedback_submitted';
+
+    // Se já enviou neste navegador, desabilita tudo
+    const already = localStorage.getItem(STORAGE_KEY) === '1';
+    if (already) {
+      $send.disabled = true;
+      $stars.forEach(b => b.disabled = true);
+      $txt.disabled = true;
+      $msg.className = 'text-emerald-700 text-sm';
+      $msg.textContent = 'Obrigado! Sua avaliação já foi registrada neste dispositivo.';
+    }
+
+    // Helpers de visual e acessibilidade
+    const paint = (n) => {
+      $stars.forEach((b, i) => {
+        const on = i < n;
+        b.classList.toggle('text-yellow-400', on);
+        b.classList.toggle('text-gray-300', !on);
+        b.classList.toggle('scale-110', on && i === n - 1);
+      });
+      const map = {1:'Ruim',2:'Regular',3:'Ok',4:'Boa',5:'Excelente'};
+      $hint.textContent = n ? `(${n} / 5 — ${map[n]})` : '';
+    };
+
+    // Eventos das estrelas
+    $stars.forEach((btn) => {
+      const val = Number(btn.dataset.value);
+      btn.addEventListener('mouseenter', () => !already && paint(val));
+      btn.addEventListener('focus', () => !already && paint(val));
+      btn.addEventListener('mouseleave', () => !already && paint(selected));
+      btn.addEventListener('blur', () => !already && paint(selected));
+      btn.addEventListener('click', () => {
+        if (already) return;
+        selected = val;
+        paint(selected);
+        $send.disabled = selected < 1;
+        $msg.textContent = '';
+      });
+    });
+
+    // Contador de caracteres
+    $txt.addEventListener('input', () => {
+      if ($txt.value.length > MAX_CHARS) {
+        $txt.value = $txt.value.slice(0, MAX_CHARS);
+      }
+      $count.textContent = `${$txt.value.length}/${MAX_CHARS}`;
+    });
+
+    // Envio
+    $send.addEventListener('click', async () => {
+      if (already) return;
+      if (selected < 1) {
+        $msg.className = 'text-red-600 text-sm';
+        $msg.textContent = 'Clique em 1 a 5 estrelas para enviar.';
+        return;
+      }
+
+      const payload = {
+        kind      : 'calc_feedback',   // útil pra diferenciar no Apps Script
+        rating    : selected,          // 1..5
+        comment   : ($txt.value || '').trim(),
+        page_url  : location.href,
+        user_agent: navigator.userAgent,
+        ts        : new Date().toISOString(),
+        ..._utm
+      };
+
+      $send.disabled = true;
+      $send.textContent = 'Enviando…';
+      $msg.textContent = '';
+
+      const okDone = () => {
+        localStorage.setItem(STORAGE_KEY, '1');
+        $msg.className = 'text-emerald-700 text-sm';
+        $msg.textContent = 'Obrigado! Avaliação registrada. 🙌';
+        $stars.forEach(b => b.disabled = true);
+        $txt.disabled = true;
+        $send.textContent = 'Enviado! ✅';
+      };
+
+      try {
+        const res = await fetch(FEEDBACK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          try {
+            navigator.sendBeacon?.(
+              FEEDBACK_URL,
+              new Blob([JSON.stringify(payload)], { type: 'text/plain' })
+            );
+          } catch {}
+        }
+        okDone();
+      } catch (err) {
+        try {
+          navigator.sendBeacon?.(
+            FEEDBACK_URL,
+            new Blob([JSON.stringify(payload)], { type: 'text/plain' })
+          );
+          okDone();
+        } catch {
+          $send.disabled = false;
+          $send.textContent = 'Enviar avaliação';
+          $msg.className = 'text-orange-600 text-sm';
+          $msg.textContent = 'Quase lá… confira sua conexão e tente novamente.';
+        }
+      }
+    });
+
+    paint(0);
   </script>
 </body>
 </html>
