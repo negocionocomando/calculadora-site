@@ -55,8 +55,7 @@
     </section>
 
     <div class="mt-10 text-center">
-      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html"
-         class="text-sm text-gray-700 underline">
+      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html" class="text-sm text-gray-700 underline">
         Ir direto ao simulador
       </a>
     </div>
@@ -67,13 +66,11 @@
   </main>
 
   <script>
-    // === CONFIG ===
-    // Web App (V12) — Apps Script
-    const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbz93JavRyJAFz8nn3PxmAnF-HkwWoE8NoqIFCCEa3gQozS3-eJW6f9H5mFMfhmrcsHzOQ/exec';
-    // URL do simulador publicada no GitHub Pages
+    // 1) COLE AQUI a URL do seu App da Web (dessa planilha), ex.: https://script.google.com/macros/s/XXXXX/exec
+    const WEBHOOK_URL = 'COLE_AQUI_SUA_URL_EXEC';
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // Captura UTMs
+    // 2) Captura UTMs
     const qs = new URLSearchParams(location.search);
     const utm = {
       utm_source:  qs.get('utm_source')   || '',
@@ -83,7 +80,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // Máscara leve telefone
+    // 3) Máscara leve telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -92,11 +89,13 @@
       else cel.value = v;
     });
 
+    // 4) Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       if ((form.website?.value || '').trim() !== '') return; // honeypot
 
       const payload = {
@@ -123,20 +122,19 @@
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Redirecionamento garantido (UX)
+      // Redirecionamento garantido (mesmo se o envio for bloqueado pelo navegador)
       const go = () => { window.location.href = SIMULADOR_URL; };
       const redirectTimer = setTimeout(go, 600);
 
       try {
-        // Envio principal (text/plain evita preflight CORS)
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
-        // Se falhar, tenta beacon (fire-and-forget)
         if (!res.ok) {
+          // tentamos um "fire-and-forget" como fallback
           try {
             navigator.sendBeacon?.(
               WEBHOOK_URL,
@@ -145,46 +143,35 @@
           } catch {}
         }
 
-        // Feedback
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
-
-      } catch (err) {
-        // Última tentativa de beacon
+      } catch {
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
             new Blob([JSON.stringify(payload)], { type: 'text/plain' })
           );
         } catch {}
-        // Mantém o redirecionamento pelo timer
         msg.className = 'text-orange-600 text-sm';
         msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Se quiser redirecionar já, em vez de esperar 600ms:
+        // Se quiser redirecionar imediatamente, descomente:
         // clearTimeout(redirectTimer); go();
       }
     });
 
-    // ======= DEBUG OPCIONAL (chame no console: _sendTestLead()) =======
-    window._sendTestLead = () => {
-      return fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          nome:'Debug',
-          email:'debug@teste.com',
-          celular:'67999999999',
-          page_url: location.href
-        })
+    /* DEBUG opcional no console do navegador:
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        nome:'Debug', email:'debug@teste.com', celular:'67999999999', page_url: location.href
       })
-      .then(r => r.text())
-      .then(t => { console.log('RESPOSTA:', t); return t; })
-      .catch(e => { console.error(e); throw e; });
-    };
+    }).then(r=>r.text()).then(console.log).catch(console.error);
+    */
   </script>
 </body>
 </html>
