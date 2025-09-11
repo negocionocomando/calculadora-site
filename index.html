@@ -54,15 +54,24 @@
       </form>
     </section>
 
+    <!-- sem link para o simulador aqui -->
     <p class="mt-6 text-center text-xs text-gray-500">
       © 2025 Negócio no Comando
     </p>
   </main>
 
   <script>
-    // URL do seu Web App e do simulador
+    // URL do seu Web App (implementação atual)
     const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+
+    // (failsafe) remove qualquer link antigo pro simulador que esteja no HTML em cache
+    try {
+      document.querySelectorAll('a[href*="simulador.html"]').forEach(a => {
+        const wrap = a.closest('div') || a;
+        wrap.remove();
+      });
+    } catch {}
 
     // Captura UTMs da URL
     const qs = new URLSearchParams(location.search);
@@ -114,7 +123,7 @@
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Timer de redirecionamento garantido (só roda após submit)
+      // Timer de redirecionamento garantido (UX)
       const go = () => { window.location.href = SIMULADOR_URL; };
       const redirectTimer = setTimeout(go, 700);
 
@@ -126,7 +135,7 @@
           body: JSON.stringify(payload)
         });
 
-        // Falhou? tenta beacon (fire-and-forget)
+        // Falhou? tenta beacon
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -141,7 +150,6 @@
         btn.textContent = 'Enviado! ✅';
 
       } catch (err) {
-        // Última tentativa de beacon
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
@@ -153,8 +161,7 @@
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Se quiser redirecionar imediatamente, comente o setTimeout e chame go() aqui.
-        // clearTimeout(redirectTimer); go();
+        // clearTimeout(redirectTimer); go(); // use se quiser redirecionar imediato
       }
     });
   </script>
