@@ -66,11 +66,11 @@
   </main>
 
   <script>
-    // SEU Web App (Versão 11)
-    const WEBHOOK_URL  = 'https://script.google.com/macros/s/AKfycbxvZkI5kw-9Yaj_89JYg2MDbmVAsm0Grosd-K9jZOQLcsIBEjDES_fBNyBorQA5sTa-Pg/exec';
+    // ====== CONFIG ======
+    const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbz93JavRyJAFz8nn3PxmAnF-HkwWoE8NoqIFCCEa3gQozS3-eJW6f9H5mFMfhmrcsHzOQ/exec';
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // UTMs
+    // Capturar UTMs e URL
     const qs = new URLSearchParams(location.search);
     const utm = {
       utm_source:  qs.get('utm_source')   || '',
@@ -89,13 +89,14 @@
       else cel.value = v;
     });
 
+    // Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Honeypot
+      // Honeypot: se o robô preencher, não envia
       if ((form.website?.value || '').trim() !== '') return;
 
       const payload = {
@@ -106,7 +107,7 @@
         page_url: location.href
       };
 
-      // Validações
+      // validações simples
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -122,17 +123,19 @@
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Timer de redirecionamento (para não travar UX)
+      // Redirecionamento garantido (UX): mesmo que a rede bloqueie, o usuário avança
       const go = () => { window.location.href = SIMULADOR_URL; };
-      const redirectTimer = setTimeout(go, 700);
+      const redirectTimer = setTimeout(go, 600);
 
       try {
+        // text/plain evita preflight CORS; Apps Script lê em e.postData.contents
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
+        // Se falhar, tenta um "fire-and-forget" com sendBeacon
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -147,6 +150,7 @@
         btn.textContent = 'Enviado! ✅';
 
       } catch (err) {
+        // Última tentativa de envio em background
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
@@ -154,23 +158,14 @@
           );
         } catch {}
         msg.className = 'text-orange-600 text-sm';
-        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
+        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em “Ir direto ao simulador”.';
         btn.textContent = original;
       } finally {
         btn.disabled = false;
+        // Se quiser redirecionar na hora (sem esperar 600ms), descomente:
+        // clearTimeout(redirectTimer); go();
       }
     });
-
-    // (Opcional) DEBUG RÁPIDO – enviar 1 lead de teste ao abrir a página:
-    /*
-    fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        nome:'Debug', email:'debug@teste.com', celular:'67999999999', page_url: location.href
-      })
-    }).then(r => r.text()).then(t => console.log('DEBUG:', t)).catch(console.error);
-    */
   </script>
 </body>
 </html>
