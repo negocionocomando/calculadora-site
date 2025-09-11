@@ -66,23 +66,21 @@
   </main>
 
   <script>
-    // 1) URL do seu App da Web (Versão 14)
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
-
-    // 2) URL ABSOLUTA do simulador (GitHub Pages)
+    // Endpoints de produção
+    const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // 3) Captura UTMs da URL
+    // UTMs
     const qs = new URLSearchParams(location.search);
     const utm = {
-      utm_source:  qs.get('utm_source')   || '',
-      utm_medium:  qs.get('utm_medium')   || '',
-      utm_campaign:qs.get('utm_campaign') || '',
-      utm_term:    qs.get('utm_term')     || '',
-      utm_content: qs.get('utm_content')  || ''
+      utm_source  : qs.get('utm_source')   || '',
+      utm_medium  : qs.get('utm_medium')   || '',
+      utm_campaign: qs.get('utm_campaign') || '',
+      utm_term    : qs.get('utm_term')     || '',
+      utm_content : qs.get('utm_content')  || ''
     };
 
-    // 4) Máscara leve de telefone
+    // Máscara simples de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -91,25 +89,22 @@
       else cel.value = v;
     });
 
-    // 5) Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      // Honeypot anti-bot
-      if ((form.website?.value || '').trim() !== '') return;
+      if ((form.website?.value || '').trim() !== '') return; // honeypot
 
       const payload = {
-        nome   : (form.nome.value   || '').trim(),
-        email  : (form.email.value  || '').trim(),
-        celular: (form.celular.value|| '').replace(/\D/g,''),
+        nome    : (form.nome.value   || '').trim(),
+        email   : (form.email.value  || '').trim(),
+        celular : (form.celular.value|| '').replace(/\D/g,''),
         ...utm,
         page_url: location.href
       };
 
-      // Validações
+      // validações cliente
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -121,24 +116,21 @@
         return;
       }
 
-      // Estado do botão
       const btn = form.querySelector('button[type="submit"]');
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Redirecionamento garantido (UX): dispara em 600ms mesmo se o envio for bloqueado
+      // Redirecionamento garantido (mesmo se alguma extensão bloquear o fetch)
       const go = () => { window.location.href = SIMULADOR_URL; };
       const redirectTimer = setTimeout(go, 600);
 
       try {
-        // Envia como text/plain para evitar preflight CORS
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
-        // Se a resposta não for OK, tenta um envio "fire-and-forget" como fallback
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -152,8 +144,7 @@
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
 
-      } catch {
-        // Última tentativa via beacon
+      } catch (_) {
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
@@ -165,20 +156,15 @@
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Para redirecionar imediatamente sem esperar os 600ms, descomente:
+        // Se quiser redirecionar imediatamente, descomente:
         // clearTimeout(redirectTimer); go();
       }
     });
 
-    /* DEBUG opcional no console do navegador:
-    fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        nome:'Debug', email:'debug@teste.com', celular:'67999999999', page_url: location.href
-      })
-    }).then(r=>r.text()).then(console.log).catch(console.error);
-    */
+    // ⚙️ Debug opcional no console (cole no DevTools se quiser testar manualmente)
+    // fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    //   body: JSON.stringify({nome:'Debug',email:'debug@teste.com',celular:'67999999999',page_url:location.href})})
+    //   .then(r=>r.text()).then(console.log).catch(console.error);
   </script>
 </body>
 </html>
