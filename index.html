@@ -54,33 +54,27 @@
       </form>
     </section>
 
-    <div class="mt-10 text-center">
-      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html" class="text-sm text-gray-700 underline">
-        Ir direto ao simulador
-      </a>
-    </div>
-
     <p class="mt-6 text-center text-xs text-gray-500">
       © 2025 Negócio no Comando
     </p>
   </main>
 
   <script>
-    // Endpoints de produção
+    // URL do seu Web App e do simulador
     const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // UTMs
+    // Captura UTMs da URL
     const qs = new URLSearchParams(location.search);
     const utm = {
-      utm_source  : qs.get('utm_source')   || '',
-      utm_medium  : qs.get('utm_medium')   || '',
+      utm_source:   qs.get('utm_source')   || '',
+      utm_medium:   qs.get('utm_medium')   || '',
       utm_campaign: qs.get('utm_campaign') || '',
-      utm_term    : qs.get('utm_term')     || '',
-      utm_content : qs.get('utm_content')  || ''
+      utm_term:     qs.get('utm_term')     || '',
+      utm_content:  qs.get('utm_content')  || ''
     };
 
-    // Máscara simples de telefone
+    // Máscara leve de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -104,7 +98,7 @@
         page_url: location.href
       };
 
-      // validações cliente
+      // validações
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -120,17 +114,19 @@
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Redirecionamento garantido (mesmo se alguma extensão bloquear o fetch)
+      // Timer de redirecionamento garantido (só roda após submit)
       const go = () => { window.location.href = SIMULADOR_URL; };
-      const redirectTimer = setTimeout(go, 600);
+      const redirectTimer = setTimeout(go, 700);
 
       try {
+        // Envio principal
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
+        // Falhou? tenta beacon (fire-and-forget)
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -144,7 +140,8 @@
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
 
-      } catch (_) {
+      } catch (err) {
+        // Última tentativa de beacon
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
@@ -152,19 +149,14 @@
           );
         } catch {}
         msg.className = 'text-orange-600 text-sm';
-        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
+        msg.textContent = 'Quase lá… se não abrir em instantes, atualize a página e tente novamente.';
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Se quiser redirecionar imediatamente, descomente:
+        // Se quiser redirecionar imediatamente, comente o setTimeout e chame go() aqui.
         // clearTimeout(redirectTimer); go();
       }
     });
-
-    // ⚙️ Debug opcional no console (cole no DevTools se quiser testar manualmente)
-    // fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    //   body: JSON.stringify({nome:'Debug',email:'debug@teste.com',celular:'67999999999',page_url:location.href})})
-    //   .then(r=>r.text()).then(console.log).catch(console.error);
   </script>
 </body>
 </html>
