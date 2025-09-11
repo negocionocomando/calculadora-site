@@ -66,8 +66,8 @@
   </main>
 
   <script>
-    // URL do seu Web App (implementação V8)
-    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzqnpYr1MVq77baq0ySNwF73hwaFdzpNJGOwAdRhqH65rWeZl9j9mLt0fcJi2GXEEYe8Q/exec';
+    // URLs
+    const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbzqnpYr1MVq77baq0ySNwF73hwaFdzpNJGOwAdRhqH65rWeZl9j9mLt0fcJi2GXEEYe8Q/exec'; // V9
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
     // Captura UTMs
@@ -80,7 +80,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // Máscara leve telefone
+    // Máscara leve de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -104,7 +104,7 @@
         page_url: location.href
       };
 
-      // validações
+      // Validações
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -125,14 +125,14 @@
       const redirectTimer = setTimeout(go, 600);
 
       try {
-        // Envio principal
+        // Envio principal (text/plain evita preflight CORS)
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
-        // Se bloqueou/erro de rede, tenta beacon (fire-and-forget)
+        // Se falhar, tenta beacon (fire-and-forget)
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
@@ -142,7 +142,7 @@
           } catch {}
         }
 
-        // Feedback visual (o redirecionamento já está a caminho)
+        // Feedback (o redirecionamento já está a caminho)
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
@@ -155,7 +155,6 @@
             new Blob([JSON.stringify(payload)], { type: 'text/plain' })
           );
         } catch {}
-        // Mantém o redirecionamento pelo timer
         msg.className = 'text-orange-600 text-sm';
         msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
         btn.textContent = original;
@@ -165,6 +164,25 @@
         // clearTimeout(redirectTimer); go();
       }
     });
+
+    // ===== TESTE DE WEBHOOK (opcional) =====
+    // Rode no console: __testWebhook()
+    window.__testWebhook = function () {
+      const debugPayload = {
+        nome:'Debug',
+        email:'debug@teste.com',
+        celular:'67999999999',
+        page_url: location.href
+      };
+      return fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(debugPayload)
+      })
+      .then(r => r.text())
+      .then(t => (console.log('Webhook test OK:', t), t))
+      .catch(e => (console.error('Webhook test ERROR:', e), e));
+    };
   </script>
 </body>
 </html>
