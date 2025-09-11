@@ -66,11 +66,13 @@
   </main>
 
   <script>
-    // 1) COLE AQUI a URL do seu App da Web (dessa planilha), ex.: https://script.google.com/macros/s/XXXXX/exec
-    const WEBHOOK_URL = 'COLE_AQUI_SUA_URL_EXEC';
+    // 1) URL do seu App da Web (Versão 14)
+    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
+
+    // 2) URL ABSOLUTA do simulador (GitHub Pages)
     const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
 
-    // 2) Captura UTMs
+    // 3) Captura UTMs da URL
     const qs = new URLSearchParams(location.search);
     const utm = {
       utm_source:  qs.get('utm_source')   || '',
@@ -80,7 +82,7 @@
       utm_content: qs.get('utm_content')  || ''
     };
 
-    // 3) Máscara leve telefone
+    // 4) Máscara leve de telefone
     const cel = document.getElementById('celular');
     cel.addEventListener('input', () => {
       let v = cel.value.replace(/\D/g,'').slice(0,11);
@@ -89,14 +91,15 @@
       else cel.value = v;
     });
 
-    // 4) Envio do formulário
+    // 5) Envio do formulário
     const form = document.getElementById('leadForm');
     const msg  = document.getElementById('msg');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if ((form.website?.value || '').trim() !== '') return; // honeypot
+      // Honeypot anti-bot
+      if ((form.website?.value || '').trim() !== '') return;
 
       const payload = {
         nome   : (form.nome.value   || '').trim(),
@@ -106,7 +109,7 @@
         page_url: location.href
       };
 
-      // validações
+      // Validações
       if (!payload.nome || !payload.email || !payload.celular) {
         msg.className = 'text-red-600 text-sm';
         msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
@@ -118,23 +121,25 @@
         return;
       }
 
+      // Estado do botão
       const btn = form.querySelector('button[type="submit"]');
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-      // Redirecionamento garantido (mesmo se o envio for bloqueado pelo navegador)
+      // Redirecionamento garantido (UX): dispara em 600ms mesmo se o envio for bloqueado
       const go = () => { window.location.href = SIMULADOR_URL; };
       const redirectTimer = setTimeout(go, 600);
 
       try {
+        // Envia como text/plain para evitar preflight CORS
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
+        // Se a resposta não for OK, tenta um envio "fire-and-forget" como fallback
         if (!res.ok) {
-          // tentamos um "fire-and-forget" como fallback
           try {
             navigator.sendBeacon?.(
               WEBHOOK_URL,
@@ -146,7 +151,9 @@
         msg.className = 'text-emerald-700 text-sm';
         msg.textContent = 'Cadastro recebido. Redirecionando…';
         btn.textContent = 'Enviado! ✅';
+
       } catch {
+        // Última tentativa via beacon
         try {
           navigator.sendBeacon?.(
             WEBHOOK_URL,
@@ -158,7 +165,7 @@
         btn.textContent = original;
       } finally {
         btn.disabled = false;
-        // Se quiser redirecionar imediatamente, descomente:
+        // Para redirecionar imediatamente sem esperar os 600ms, descomente:
         // clearTimeout(redirectTimer); go();
       }
     });
