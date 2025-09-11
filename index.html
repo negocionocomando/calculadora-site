@@ -3,230 +3,168 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculadora de Precificação</title>
-  <meta name="description" content="Calcule preço sugerido, markup, margem de contribuição e lucro por unidade." />
+  <title>Calculadora de Precificação – Acesso</title>
+  <meta name="description" content="Cadastre-se para acessar gratuitamente a Calculadora de Precificação (markup, margem de contribuição, lucro e ponto de equilíbrio)." />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
-  <main class="mx-auto max-w-5xl px-4 py-10">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Calculadora de Precificação</h1>
-      <a href="#" class="rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800">Quero dominar a precificação</a>
-    </div>
+  <main class="mx-auto max-w-2xl px-4 py-10">
+    <header class="mb-8 text-center">
+      <h1 class="text-2xl font-bold">Acesse a Calculadora de Precificação</h1>
+      <p class="mt-2 text-sm text-gray-600">Grátis • Instantânea • Sem pegadinha</p>
+    </header>
 
-    <div class="grid gap-6 md:grid-cols-2">
-      <!-- ENTRADAS -->
-      <section class="rounded-2xl border bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-lg font-semibold">Entradas</h2>
+    <section class="rounded-2xl border bg-white p-6 shadow-sm">
+      <form id="leadForm" class="grid gap-4" autocomplete="on" novalidate>
+        <!-- Honeypot anti-spam (não preencha) -->
+        <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off">
 
-        <div class="mb-4">
-          <label for="custo" class="mb-1 block text-sm font-medium">Custo unitário (R$)</label>
-          <input id="custo" type="number" inputmode="decimal" min="0" step="any"
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="nome">Nome</label>
+          <input id="nome" name="nome" required
                  class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                 placeholder="Ex.: 50,00" />
+                 placeholder="Seu nome" />
         </div>
 
-        <div class="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label for="impostos" class="mb-1 block text-sm font-medium">Impostos (% do preço)</label>
-            <input id="impostos" type="number" inputmode="decimal" min="0" step="any"
-                   class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                   value="0" placeholder="0" />
-          </div>
-
-          <div>
-            <label for="taxas" class="mb-1 block text-sm font-medium">Taxas/Cartão (% do preço)</label>
-            <input id="taxas" type="number" inputmode="decimal" min="0" step="any"
-                   class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                   value="0" placeholder="0" />
-          </div>
-        </div>
-
-        <div class="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label for="comissao" class="mb-1 block text-sm font-medium">Comissão (% do preço)</label>
-            <input id="comissao" type="number" inputmode="decimal" min="0" step="any"
-                   class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                   value="0" placeholder="0" />
-          </div>
-
-          <div>
-            <label for="margem" class="mb-1 block text-sm font-medium">Margem de lucro desejada (% do preço)</label>
-            <input id="margem" type="number" inputmode="decimal" min="0" step="any"
-                   class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                   value="0" placeholder="0" />
-          </div>
-        </div>
-
-        <div class="mb-4">
-          <label for="fixos" class="mb-1 block text-sm font-medium">Custos fixos mensais (R$) — opcional</label>
-          <input id="fixos" type="number" inputmode="decimal" min="0" step="any"
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="email">E-mail</label>
+          <input id="email" type="email" name="email" required
                  class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
-                 placeholder="Para calcular o ponto de equilíbrio" />
+                 placeholder="voce@exemplo.com" />
         </div>
 
-        <button id="btnLimpar" type="button"
-                class="rounded-xl border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50">
-          Limpar
+        <div>
+          <label class="mb-1 block text-sm font-medium" for="celular">WhatsApp</label>
+          <input id="celular" type="tel" name="celular" required
+                 class="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2"
+                 placeholder="(00) 00000-0000" />
+        </div>
+
+        <label class="flex items-start gap-2 text-xs text-gray-600 select-none">
+          <input id="lgpd" type="checkbox" class="mt-1" checked>
+          Autorizo o envio de conteúdos e ofertas por WhatsApp e e-mail (LGPD).
+        </label>
+
+        <button type="submit"
+                class="rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white hover:bg-gray-800 disabled:cursor-wait disabled:opacity-70">
+          Liberar acesso agora
         </button>
-      </section>
 
-      <!-- RESULTADOS -->
-      <section class="rounded-2xl border bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-lg font-semibold">Resultados</h2>
+        <p id="msg" class="text-sm"></p>
+      </form>
+    </section>
 
-        <div class="mb-4 grid gap-3">
-          <div class="rounded-xl border p-3">
-            <p class="text-xs text-gray-500">Preço sugerido</p>
-            <p id="preco" class="text-xl font-semibold">R$ 0,00</p>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Markup</p>
-              <p id="markup" class="text-lg font-semibold">0.00x</p>
-            </div>
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Lucro por unidade</p>
-              <p id="lucro" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Margem de contribuição</p>
-              <p id="mc_valor" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Margem de contribuição %</p>
-              <p id="mc_perc" class="text-lg font-semibold">0.0%</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Impostos (R$)</p>
-              <p id="imp_val" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Taxas/Cartão (R$)</p>
-              <p id="tax_val" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Comissão (R$)</p>
-              <p id="com_val" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-            <div class="rounded-xl border p-3">
-              <p class="text-xs text-gray-500">Custos variáveis (R$)</p>
-              <p id="variaveis" class="text-lg font-semibold">R$ 0,00</p>
-            </div>
-          </div>
-
-          <div class="rounded-xl border p-3">
-            <p class="text-xs text-gray-500">Ponto de equilíbrio (unid./mês)</p>
-            <p id="pe" class="text-lg font-semibold">—</p>
-          </div>
-        </div>
-
-        <p class="mt-4 text-xs text-gray-500">
-          Fórmula: Preço = Custo / (1 - (Impostos% + Taxas% + Comissão% + Margem%)).<br />
-          Margem informada = lucro líquido desejado sobre o preço.
-        </p>
-      </section>
+    <div class="mt-10 text-center">
+      <a href="https://negocionocomando.github.io/calculadora-site/simulador.html" class="text-sm text-gray-700 underline">
+        Ir direto ao simulador
+      </a>
     </div>
+
+    <p class="mt-6 text-center text-xs text-gray-500">
+      © 2025 Negócio no Comando
+    </p>
   </main>
 
   <script>
-    // Util
-    const money = (v) => (isFinite(v) ? v : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const pct   = (v) => `${(isFinite(v) ? v : 0).toFixed(1)}%`;
-    const val   = (id) => {
-      const el = document.getElementById(id);
-      if (!el) return 0;
-      const s = String(el.value || '').replace('.', '').replace(',', '.');
-      const n = parseFloat(s);
-      return isFinite(n) ? n : 0;
+    // Endpoints de produção
+    const WEBHOOK_URL   = 'https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec';
+    const SIMULADOR_URL = 'https://negocionocomando.github.io/calculadora-site/simulador.html';
+
+    // UTMs
+    const qs = new URLSearchParams(location.search);
+    const utm = {
+      utm_source  : qs.get('utm_source')   || '',
+      utm_medium  : qs.get('utm_medium')   || '',
+      utm_campaign: qs.get('utm_campaign') || '',
+      utm_term    : qs.get('utm_term')     || '',
+      utm_content : qs.get('utm_content')  || ''
     };
 
-    function recalc() {
-      const custo = val('custo');
-      const pImp  = val('impostos');
-      const pTax  = val('taxas');
-      const pCom  = val('comissao');
-      const pMar  = val('margem');
-      const fixos = val('fixos');
+    // Máscara simples de telefone
+    const cel = document.getElementById('celular');
+    cel.addEventListener('input', () => {
+      let v = cel.value.replace(/\D/g,'').slice(0,11);
+      if (v.length > 6) cel.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+      else if (v.length > 2) cel.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+      else cel.value = v;
+    });
 
-      const somaP = pImp + pTax + pCom + pMar;
+    const form = document.getElementById('leadForm');
+    const msg  = document.getElementById('msg');
 
-      let preco = 0, impV=0, taxV=0, comV=0, lucro=0, variaveis=0, markup=0, pe = '—';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if ((form.website?.value || '').trim() !== '') return; // honeypot
 
-      if (custo > 0 && somaP < 100) {
-        preco = custo / (1 - somaP/100);
-        impV  = preco * pImp/100;
-        taxV  = preco * pTax/100;
-        comV  = preco * pCom/100;
-        lucro = preco * pMar/100;               // lucro líquido desejado
-        variaveis = preco - lucro;              // custo + variáveis
-        markup = preco / custo;
+      const payload = {
+        nome    : (form.nome.value   || '').trim(),
+        email   : (form.email.value  || '').trim(),
+        celular : (form.celular.value|| '').replace(/\D/g,''),
+        ...utm,
+        page_url: location.href
+      };
 
-        if (fixos > 0 && lucro > 0) {
-          pe = Math.ceil(fixos / lucro).toLocaleString('pt-BR');
-        }
+      // validações cliente
+      if (!payload.nome || !payload.email || !payload.celular) {
+        msg.className = 'text-red-600 text-sm';
+        msg.textContent = 'Preencha nome, e-mail e WhatsApp.';
+        return;
+      }
+      if (!document.getElementById('lgpd').checked) {
+        msg.className = 'text-red-600 text-sm';
+        msg.textContent = 'Marque a autorização LGPD para continuar.';
+        return;
       }
 
-      // Preenche UI
-      document.getElementById('preco').textContent     = money(preco);
-      document.getElementById('markup').textContent    = `${isFinite(markup) ? markup.toFixed(2) : '0.00'}x`;
-      document.getElementById('lucro').textContent     = money(lucro);
-      document.getElementById('mc_valor').textContent  = money(lucro);
-      document.getElementById('mc_perc').textContent   = pct(pMar);
-      document.getElementById('imp_val').textContent   = money(impV);
-      document.getElementById('tax_val').textContent   = money(taxV);
-      document.getElementById('com_val').textContent   = money(comV);
-      document.getElementById('variaveis').textContent = money(variaveis);
-      document.getElementById('pe').textContent        = pe;
-    }
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Enviando...'; msg.textContent = '';
 
-    // Eventos
-    ['custo','impostos','taxas','comissao','margem','fixos'].forEach(id => {
-      const el = document.getElementById(id);
-      el && el.addEventListener('input', recalc);
-    });
+      // Redirecionamento garantido (mesmo se alguma extensão bloquear o fetch)
+      const go = () => { window.location.href = SIMULADOR_URL; };
+      const redirectTimer = setTimeout(go, 600);
 
-    document.getElementById('btnLimpar').addEventListener('click', () => {
-      ['custo','impostos','taxas','comissao','margem','fixos'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.value = (id === 'impostos' || id === 'taxas' || id === 'comissao' || id === 'margem') ? '0' : '';
-      });
-      recalc();
-    });
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
 
-    // Cálculo inicial
-    recalc();
-  </script>
-
-  <!-- Reset garantido: se vier com valores padrão indesejados, zera -->
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const els = [
-        document.getElementById('impostos'),
-        document.getElementById('taxas'),
-        document.getElementById('margem'),
-      ].filter(Boolean);
-
-      els.forEach(el => {
-        if (['', '10', '3', '20'].includes(String(el.value).trim())) {
-          el.value = '0';
+        if (!res.ok) {
+          try {
+            navigator.sendBeacon?.(
+              WEBHOOK_URL,
+              new Blob([JSON.stringify(payload)], { type: 'text/plain' })
+            );
+          } catch {}
         }
-      });
 
-      // recalcula após o reset
-      (typeof recalc === 'function') && recalc();
+        msg.className = 'text-emerald-700 text-sm';
+        msg.textContent = 'Cadastro recebido. Redirecionando…';
+        btn.textContent = 'Enviado! ✅';
+
+      } catch (_) {
+        try {
+          navigator.sendBeacon?.(
+            WEBHOOK_URL,
+            new Blob([JSON.stringify(payload)], { type: 'text/plain' })
+          );
+        } catch {}
+        msg.className = 'text-orange-600 text-sm';
+        msg.textContent = 'Estamos redirecionando. Se não abrir, clique em "Ir direto ao simulador".';
+        btn.textContent = original;
+      } finally {
+        btn.disabled = false;
+        // Se quiser redirecionar imediatamente, descomente:
+        // clearTimeout(redirectTimer); go();
+      }
     });
+
+    // ⚙️ Debug opcional no console (cole no DevTools se quiser testar manualmente)
+    // fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    //   body: JSON.stringify({nome:'Debug',email:'debug@teste.com',celular:'67999999999',page_url:location.href})})
+    //   .then(r=>r.text()).then(console.log).catch(console.error);
   </script>
 </body>
 </html>
