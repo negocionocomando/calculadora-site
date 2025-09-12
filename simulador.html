@@ -113,7 +113,7 @@
 
   <script>
     document.getElementById('year2').textContent = new Date().getFullYear();
-    const URL_CTA_VENDAS = "https://vendas.negocionocomando.com.br"; // SUBSTITUA AQUI
+    const URL_CTA_VENDAS = "https://vendas.negocionocomando.com.br"; // SUBSTITUA AQUI (se quiser)
     document.getElementById('ctaVendas').href = URL_CTA_VENDAS;
 
     const fmt = (n) => (isFinite(n) ? n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00');
@@ -193,8 +193,8 @@
 
     /* ================== FEEDBACK / AVALIAÇÃO ================== */
 
-    // 🔗 Substitua pela sua URL de Apps Script (Web App) que recebe POST de texto/JSON
-    const FEEDBACK_URL = "https://script.google.com/macros/s/SEU_ID_DO_APPS_SCRIPT/exec"; // <- TROQUE AQUI
+    // Usa o MESMO webhook dos leads:
+    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbyR6-LCxTcIb9WufGXhKJ7LqT7rd2lt1bVvQPVdH4aNnAKXdO3dbeU8X_2y5lEfsCvSxQ/exec";
 
     // Captura UTMs da página do simulador (se existirem)
     const _qs = new URLSearchParams(location.search);
@@ -275,7 +275,7 @@
       }
 
       const payload = {
-        kind      : 'calc_feedback',   // útil pra diferenciar no Apps Script
+        kind      : 'calc_feedback',   // roteia no Apps Script para a aba "feedback"
         rating    : selected,          // 1..5
         comment   : ($txt.value || '').trim(),
         page_url  : location.href,
