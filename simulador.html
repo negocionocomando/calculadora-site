@@ -193,10 +193,10 @@
 
     /* ================== FEEDBACK / AVALIAÇÃO ================== */
 
-    // Usa sua implantação e força roteamento por querystring:
-    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbzGBscJcPOv5bhjdJBV1FUJ_FbKzSmSq4RYS1HxKFH7__fmQnk9J76QyDkz5--o2D2WWg/exec?kind=calc_feedback";
+    // Usa sua implantação V16 e força roteamento por querystring
+    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbzS4MUu0-d_QSBXAYzEF7i4FBD82-A3rGgZWjFi8IRXUDdygbMacbZjVZey6dJJ70jSmQ/exec?kind=calc_feedback";
 
-    // Captura UTMs da página do simulador (se existirem)
+    // Captura UTMs
     const _qs = new URLSearchParams(location.search);
     const _utm = {
       utm_source:   _qs.get('utm_source')   || '',
@@ -206,20 +206,19 @@
       utm_content:  _qs.get('utm_content')  || ''
     };
 
-    // Elementos
-    const $stars     = Array.from(document.querySelectorAll('.nc-star'));
-    const $hint      = document.getElementById('nc-stars-hint');
-    const $txt       = document.getElementById('nc-feedback');
-    const $count     = document.getElementById('nc-count');
-    const $send      = document.getElementById('nc-send');
-    const $msg       = document.getElementById('nc-msg');
+    // Elementos feedback
+    const $stars = Array.from(document.querySelectorAll('.nc-star'));
+    const $hint  = document.getElementById('nc-stars-hint');
+    const $txt   = document.getElementById('nc-feedback');
+    const $count = document.getElementById('nc-count');
+    const $send  = document.getElementById('nc-send');
+    const $msg   = document.getElementById('nc-msg');
 
-    // Estado
     let selected = 0;
     const MAX_CHARS = 600;
     const STORAGE_KEY = 'nc_calc_feedback_submitted';
 
-    // Se já enviou neste navegador, desabilita tudo
+    // Já enviado?
     const already = localStorage.getItem(STORAGE_KEY) === '1';
     if (already) {
       $send.disabled = true;
@@ -229,7 +228,6 @@
       $msg.textContent = 'Obrigado! Sua avaliação já foi registrada neste dispositivo.';
     }
 
-    // Helpers de visual e acessibilidade
     const paint = (n) => {
       $stars.forEach((b, i) => {
         const on = i < n;
@@ -241,7 +239,6 @@
       $hint.textContent = n ? `(${n} / 5 — ${map[n]})` : '';
     };
 
-    // Eventos das estrelas
     $stars.forEach((btn) => {
       const val = Number(btn.dataset.value);
       btn.addEventListener('mouseenter', () => !already && paint(val));
@@ -257,15 +254,11 @@
       });
     });
 
-    // Contador de caracteres
     $txt.addEventListener('input', () => {
-      if ($txt.value.length > MAX_CHARS) {
-        $txt.value = $txt.value.slice(0, MAX_CHARS);
-      }
+      if ($txt.value.length > MAX_CHARS) $txt.value = $txt.value.slice(0, MAX_CHARS);
       $count.textContent = `${$txt.value.length}/${MAX_CHARS}`;
     });
 
-    // Envio
     $send.addEventListener('click', async () => {
       if (already) return;
       if (selected < 1) {
@@ -275,8 +268,8 @@
       }
 
       const payload = {
-        kind      : 'calc_feedback',   // redundante, ajuda o servidor
-        rating    : selected,          // 1..5
+        kind      : 'calc_feedback',
+        rating    : selected,
         comment   : ($txt.value || '').trim(),
         page_url  : location.href,
         user_agent: navigator.userAgent,
@@ -297,35 +290,59 @@
         $send.textContent = 'Enviado! ✅';
       };
 
+      // ====== MODO DEBUG (LOGA RESPOSTA NO CONSOLE) ======
       try {
         const res = await fetch(FEEDBACK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
+
+        const text = await res.text();
+        console.log('FEEDBACK response:', text);
+
         if (!res.ok) {
           try {
             navigator.sendBeacon?.(
               FEEDBACK_URL,
               new Blob([JSON.stringify(payload)], { type: 'text/plain' })
             );
-          } catch {}
+            console.log('FEEDBACK beacon fallback enviado');
+          } catch (e) {
+            console.warn('Beacon falhou:', e);
+          }
         }
+
+        // Se a resposta indicar a aba, confirma
+        try {
+          const j = JSON.parse(text);
+          if (j && j.sheet === 'feedback') {
+            okDone();
+            return;
+          }
+        } catch(_) {}
+
+        // Mesmo sem 'sheet', finaliza OK pro usuário
         okDone();
+
       } catch (err) {
+        console.error('FEEDBACK erro fetch:', err);
         try {
           navigator.sendBeacon?.(
             FEEDBACK_URL,
             new Blob([JSON.stringify(payload)], { type: 'text/plain' })
           );
+          console.log('FEEDBACK beacon fallback enviado');
           okDone();
-        } catch {
+        } catch (e2) {
+          console.warn('Beacon falhou:', e2);
           $send.disabled = false;
           $send.textContent = 'Enviar avaliação';
           $msg.className = 'text-orange-600 text-sm';
           $msg.textContent = 'Quase lá… confira sua conexão e tente novamente.';
         }
       }
+      // ====== /MODO DEBUG ======
     });
 
     paint(0);
