@@ -193,8 +193,8 @@
 
     /* ================== FEEDBACK / AVALIAÇÃO ================== */
 
-    // Usa a SUA implantação V15
-    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbzGBscJcPOv5bhjdJBV1FUJ_FbKzSmSq4RYS1HxKFH7__fmQnk9J76QyDkz5--o2D2WWg/exec";
+    // Usa sua implantação e força roteamento por querystring:
+    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbzGBscJcPOv5bhjdJBV1FUJ_FbKzSmSq4RYS1HxKFH7__fmQnk9J76QyDkz5--o2D2WWg/exec?kind=calc_feedback";
 
     // Captura UTMs da página do simulador (se existirem)
     const _qs = new URLSearchParams(location.search);
@@ -275,7 +275,7 @@
       }
 
       const payload = {
-        kind      : 'calc_feedback',   // roteia para a aba "feedback"
+        kind      : 'calc_feedback',   // redundante, ajuda o servidor
         rating    : selected,          // 1..5
         comment   : ($txt.value || '').trim(),
         page_url  : location.href,
