@@ -104,8 +104,10 @@
         <button id="nc-send" class="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" disabled>
           Enviar avaliação
         </button>
+        <button id="nc-test" class="rounded-2xl border px-4 py-2 text-xs">Testar envio (debug)</button>
         <span id="nc-msg" class="text-sm"></span>
       </div>
+      <p class="mt-2 text-xs text-gray-500">Dica: para testar várias vezes no mesmo navegador, segure <strong>Shift</strong> ao clicar em “Enviar avaliação” para ignorar a trava de 1 envio.</p>
     </section>
 
     <footer class="mt-10 text-center text-xs text-gray-500">© <span id="year2"></span> Negócio no Comando — Calculadora educativa.</footer>
@@ -113,7 +115,7 @@
 
   <script>
     document.getElementById('year2').textContent = new Date().getFullYear();
-    const URL_CTA_VENDAS = "https://vendas.negocionocomando.com.br"; // opcional
+    const URL_CTA_VENDAS = "https://vendas.negocionocomando.com.br";
     document.getElementById('ctaVendas').href = URL_CTA_VENDAS;
 
     const fmt = (n) => (isFinite(n) ? n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00');
@@ -193,8 +195,8 @@
 
     /* ================== FEEDBACK / AVALIAÇÃO ================== */
 
-    // Usa sua implantação V16 e força roteamento por querystring
-    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbzS4MUu0-d_QSBXAYzEF7i4FBD82-A3rGgZWjFi8IRXUDdygbMacbZjVZey6dJJ70jSmQ/exec?kind=calc_feedback";
+    // SUA implantação V17 + roteamento via querystring
+    const FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbyXVGSk7piusDjd0-eiXD8-bxocRZCyezzPNfGOGjJNho-_cIztJVn3OkunbZhMNcWt1A/exec?kind=calc_feedback";
 
     // Captura UTMs
     const _qs = new URLSearchParams(location.search);
@@ -212,13 +214,13 @@
     const $txt   = document.getElementById('nc-feedback');
     const $count = document.getElementById('nc-count');
     const $send  = document.getElementById('nc-send');
+    const $test  = document.getElementById('nc-test');
     const $msg   = document.getElementById('nc-msg');
 
     let selected = 0;
     const MAX_CHARS = 600;
     const STORAGE_KEY = 'nc_calc_feedback_submitted';
 
-    // Já enviado?
     const already = localStorage.getItem(STORAGE_KEY) === '1';
     if (already) {
       $send.disabled = true;
@@ -251,6 +253,7 @@
         paint(selected);
         $send.disabled = selected < 1;
         $msg.textContent = '';
+        console.log('[NC] star selected:', selected);
       });
     });
 
@@ -259,90 +262,99 @@
       $count.textContent = `${$txt.value.length}/${MAX_CHARS}`;
     });
 
-    $send.addEventListener('click', async () => {
-      if (already) return;
-      if (selected < 1) {
-        $msg.className = 'text-red-600 text-sm';
-        $msg.textContent = 'Clique em 1 a 5 estrelas para enviar.';
-        return;
-      }
-
-      const payload = {
+    function buildPayload(ratingOverride) {
+      const rating = ratingOverride ?? selected;
+      return {
         kind      : 'calc_feedback',
-        rating    : selected,
+        rating    : rating,
         comment   : ($txt.value || '').trim(),
         page_url  : location.href,
         user_agent: navigator.userAgent,
         ts        : new Date().toISOString(),
         ..._utm
       };
+    }
 
-      $send.disabled = true;
-      $send.textContent = 'Enviando…';
-      $msg.textContent = '';
+    async function sendFeedback(payload) {
+      console.log('[NC] sending to', FEEDBACK_URL);
+      console.log('[NC] payload:', payload);
 
-      const okDone = () => {
-        localStorage.setItem(STORAGE_KEY, '1');
-        $msg.className = 'text-emerald-700 text-sm';
-        $msg.textContent = 'Obrigado! Avaliação registrada. 🙌';
-        $stars.forEach(b => b.disabled = true);
-        $txt.disabled = true;
-        $send.textContent = 'Enviado! ✅';
-      };
+      const res = await fetch(FEEDBACK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
 
-      // ====== MODO DEBUG (LOGA RESPOSTA NO CONSOLE) ======
-      try {
-        const res = await fetch(FEEDBACK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
+      const text = await res.text();
+      console.log('[NC] response status:', res.status);
+      console.log('[NC] response body:', text);
+      let j = null;
+      try { j = JSON.parse(text); } catch {}
 
-        const text = await res.text();
-        console.log('FEEDBACK response:', text);
-
-        if (!res.ok) {
-          try {
-            navigator.sendBeacon?.(
-              FEEDBACK_URL,
-              new Blob([JSON.stringify(payload)], { type: 'text/plain' })
-            );
-            console.log('FEEDBACK beacon fallback enviado');
-          } catch (e) {
-            console.warn('Beacon falhou:', e);
-          }
-        }
-
-        // Se a resposta indicar a aba, confirma
-        try {
-          const j = JSON.parse(text);
-          if (j && j.sheet === 'feedback') {
-            okDone();
-            return;
-          }
-        } catch(_) {}
-
-        // Mesmo sem 'sheet', finaliza OK pro usuário
-        okDone();
-
-      } catch (err) {
-        console.error('FEEDBACK erro fetch:', err);
+      if (!res.ok) {
         try {
           navigator.sendBeacon?.(
             FEEDBACK_URL,
             new Blob([JSON.stringify(payload)], { type: 'text/plain' })
           );
-          console.log('FEEDBACK beacon fallback enviado');
-          okDone();
-        } catch (e2) {
-          console.warn('Beacon falhou:', e2);
-          $send.disabled = false;
-          $send.textContent = 'Enviar avaliação';
-          $msg.className = 'text-orange-600 text-sm';
-          $msg.textContent = 'Quase lá… confira sua conexão e tente novamente.';
+          console.log('[NC] beacon fallback enviado');
+        } catch (e) {
+          console.warn('[NC] beacon falhou:', e);
         }
       }
-      // ====== /MODO DEBUG ======
+      return j || { ok: res.ok, raw: text };
+    }
+
+    $send.addEventListener('click', async (ev) => {
+      const ignoreLock = ev.shiftKey; // Shift ignora trava para testes
+      if (already && !ignoreLock) return;
+      if (selected < 1) {
+        $msg.className = 'text-red-600 text-sm';
+        $msg.textContent = 'Clique em 1 a 5 estrelas para enviar.';
+        return;
+      }
+
+      if (ignoreLock) {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('[NC] SHIFT: ignorando trava localStorage para teste.');
+      }
+
+      const payload = buildPayload();
+      $send.disabled = true;
+      $send.textContent = 'Enviando…';
+      $msg.textContent = '';
+
+      try {
+        const j = await sendFeedback(payload);
+        if (j && (j.sheet === 'feedback' || j.ok)) {
+          localStorage.setItem(STORAGE_KEY, '1');
+          $msg.className = 'text-emerald-700 text-sm';
+          $msg.textContent = 'Obrigado! Avaliação registrada. 🙌';
+          $stars.forEach(b => b.disabled = true);
+          $txt.disabled = true;
+          $send.textContent = 'Enviado! ✅';
+        } else {
+          throw new Error('Resposta inesperada do servidor');
+        }
+      } catch (e) {
+        console.error('[NC] erro final:', e);
+        $send.disabled = false;
+        $send.textContent = 'Enviar avaliação';
+        $msg.className = 'text-orange-600 text-sm';
+        $msg.textContent = 'Não foi possível enviar agora. Tente novamente.';
+      }
+    });
+
+    // Botão de teste: envia rating 5 + comentário "DEBUG"
+    document.getElementById('nc-test').addEventListener('click', async () => {
+      const payload = buildPayload(5);
+      payload.comment = 'DEBUG manual';
+      try {
+        const j = await sendFeedback(payload);
+        alert('Resposta do servidor (veja o Console para detalhes): ' + JSON.stringify(j));
+      } catch (e) {
+        alert('Falha no teste: ' + e);
+      }
     });
 
     paint(0);
